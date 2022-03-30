@@ -255,7 +255,7 @@ fi
 
 
 clear
-echo " script interrupted for testing
+echo " script interrupted for testing"
 read -rp "   Press Enter to continue  "
 exit
 
