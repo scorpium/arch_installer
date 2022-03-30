@@ -109,10 +109,10 @@ hd=$(cat hd) && rm hd
 
 auto_partition() {
 	swap_type=$(dialog --title "Swap type" \
-		--menu --no-cancel --stdout	"Would you like a swap partition, a file \
-		swap or no swap?" \
-		0 0 0 1 "Swap partition" \n
-			  2 "File swap" \n
+		--no-cancel --stdout --menu	"Would you like \
+		a swap partition, a file swap or no swap?" \
+		0 0 0 1 "Swap partition" \
+			  2 "File swap" \
 			  3 "No swap")
 	if [ "$swap_type" = "1" ]; then
 		# Ask for the size of the swap partition
