@@ -186,6 +186,8 @@ auto_partition() {
 
 
 		+${size}G
+		t
+		82
 		n
 
 
