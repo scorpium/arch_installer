@@ -109,8 +109,7 @@ hd=$(cat hd) && rm hd
 
 auto_partition() {
 	swap_type=$(dialog --title "Swap type" \
-		--menu --no-cancel --stdout\
-		"Would you like a swap partition, a file \
+		--menu --no-cancel --stdout	"Would you like a swap partition, a file \
 		swap or no swap?" \
 		0 0 0 1 "Swap partition" \n
 			  2 "File swap" \n
@@ -174,7 +173,7 @@ auto_partition() {
 
 	partprobe "$hd"
 	
-	if [ "$swap_type" = 1 ]; then
+	if [ "$swap_type" = "1" ]; then
 		fdisk "$hd" << EOF
 		g
 		n
