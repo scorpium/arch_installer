@@ -187,7 +187,8 @@ auto_partition() {
 
 		+${size}G
 		t
-		82
+		
+		19
 		n
 
 
@@ -215,6 +216,31 @@ EOF
 
 manual_partition() {
 	fdisk "$hd"
+	clear
+	echo -e "Let's format the partitions: "
+	fdisk -l
+	while true ; do
+		read -p "1)Swap Partition 2)Swap File or 3)No swap (1,2 or 3):" swap
+		swap_type=$swap
+		if [ "$swap" -lt "1" ] || [ "$swap" -gt "3" ]; then
+			echo "Wrong number"
+		elif [ "$swap" = "1" ]; then
+			read -p "Swap partition number ${hd}? :" swap_number
+			mkswap "${hd}${swap_number}"
+        		swapon "${hd}${swap_number}"
+			break
+		fi
+	done
+	while true ; do
+		read -p "Root partition number ${hd}? :" root_number
+		echo "${hd}${root_number} - Is that correct? yn" 
+		read answer
+		if [ "$answer" = "y" ]; then
+	 		mkfs.ext4 "${hd}${root_number}"
+			mount "${hd}${root_number}" /mnt
+			break
+		fi
+	done
 }
 
 while true ; do
@@ -239,17 +265,18 @@ done
 
 ### Format the partitions and mount the file systems ###
 
-if [ "$swap_type" = "1" ]; then
-	mkswap "${hd}2"
-	swapon "${hd}2"
-	mkfs.ext4 "${hd}3"
-	mount "${hd}3" /mnt
-else
-	mkfs.ext4 "${hd}2"
-	mount "${hd}2" /mnt
-fi
+if [ "$part_mode" = "2" ]; then
+	if [ "$swap_type" = "1" ]; then
+		mkswap "${hd}2"
+		swapon "${hd}2"
+		mkfs.ext4 "${hd}3"
+		mount "${hd}3" /mnt
+	else
+		mkfs.ext4 "${hd}2"
+		mount "${hd}2" /mnt
+	fi
 
-if [ "$uefi" = 1 ]; then
+if [ "$uefi" = "1" ]; then
     mkfs.fat -F32 "${hd}1"
     mkdir -p /mnt/boot/efi
     mount "${hd}1" /mnt/boot/efi
