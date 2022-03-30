@@ -8,6 +8,8 @@ yellow="\e[0;33m"
 cyan="\e[0;36m"
 reset="\e[0m"
 
+part_mode=
+
 # Never run pacman -Sy on your system!
 # Install dialog
 pacman -Sy dialog --noconfirm
@@ -275,6 +277,7 @@ if [ "$part_mode" = "2" ]; then
 		mkfs.ext4 "${hd}2"
 		mount "${hd}2" /mnt
 	fi
+fi
 
 if [ "$uefi" = "1" ]; then
     mkfs.fat -F32 "${hd}1"
