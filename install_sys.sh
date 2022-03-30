@@ -226,6 +226,7 @@ while true ; do
 		manual_partition
 		if [ "$?" = "0" ]; then
 			break
+		fi
 	elif [ "$part_mode" = "2" ]; then
 		auto_partition
 		break
