@@ -191,7 +191,7 @@ auto_partition() {
 
 
 		w
-		EOF
+EOF
 	else
 		fdisk "$hd" << EOF
 		g
@@ -206,7 +206,7 @@ auto_partition() {
 
 
 		w
-		EOF
+EOF
 	fi
 	partprobe "$hd"
 }
