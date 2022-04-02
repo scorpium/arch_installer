@@ -117,7 +117,8 @@ prepare_partition() {
     	fi
     	SWAP_ON=$(fdisk -l | grep swap | awk '{print $1}')
     	if [ -n "$SWAP_ON" ]; then
-    		swapoff $SWAP_ON 
+    		swapoff $SWAP_ON
+    	fi	
     	
 }
 
