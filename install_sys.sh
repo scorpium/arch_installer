@@ -185,7 +185,7 @@ auto_partition() {
 	[[ "$UEFI" == 0 ]] && BOOT_PARTITION_TYPE=4
 	
 	PARTITION_PARTED_UEFI="mklabel gpt mkpart ESP fat32 1MiB 512MiB mkpart root ext4 512MiB 100% set 1 esp on"
-	PARTITION_PARTED_UEFI_SWAP="mklabel gpt mkpart ESP fat32 1MiB 512MiB mkpart swap linux-swap 512MiB ${SWAP_SIZE}.5GiB mkpart root ext4 $SWAP_SIZE}.5GiB 100% set 1 esp on"
+	PARTITION_PARTED_UEFI_SWAP="mklabel gpt mkpart ESP fat32 1MiB 512MiB mkpart swap linux-swap 512MiB ${SWAP_SIZE}.5GiB mkpart root ext4 ${SWAP_SIZE}.5GiB 100% set 1 esp on"
     PARTITION_PARTED_BIOS="mklabel msdos mkpart primary ext4 4MiB 512MiB mkpart primary ext4 512MiB 100% set 1 boot on"
     PARTITION_PARTED_BIOS_SWAP="mklabel msdos mkpart primary ext4 4MiB 512MiB mkpart primary linux-swap 512MiB ${SWAP_SIZE}.5GiB mkpart primary ext4 ${SWAP_SIZE}.5GiB 100% set 1 boot on"
 
