@@ -115,6 +115,10 @@ prepare_partition() {
     	if [ $? == 0 ]; then
         	umount /mnt
     	fi
+    	SWAP_ON=$(fdisk -l | grep swap | awk '{print $1}')
+    	if [ -n "$SWAP_ON" ]; then
+    		swapoff $SWAP_ON 
+    	
 }
 
 auto_partition() {
