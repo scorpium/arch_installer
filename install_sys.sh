@@ -161,7 +161,7 @@ auto_partition() {
 		    1) 	sgdisk --zap-all $DEVICE
         		sgdisk -o $DEVICE
         		wipefs -a -f $DEVICE
-        		partprobe -s $DEVICE
+        		partprobe -s $DEVICE;;
 		    2) dd if=/dev/zero of="$DEVICE" status=progress 2>&1 \
 		        | dialog \
 		        --title "Formatting $DEVICE ..." \
