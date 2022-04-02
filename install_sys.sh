@@ -170,7 +170,7 @@ auto_partition() {
 		        | dialog \
 		        --title "Formatting $DEVICE ..." \
 		        --progressbox --stdout 20 60;;
-		    4,*) ;;
+		    4 *) ;;
 		esac
 	}
 
