@@ -148,7 +148,7 @@ auto_partition() {
 		1 "Use sgdisk (faster)" \
 		2 "Use dd (wipe all disk)" \
 		3 "Use schred (slow & secure)" \
-		4 "No need - my hard disk is empty" 2> eraser
+		4 "No need - my device is empty" 2> eraser
 
 	DEVICE_ERASER=$(cat eraser); rm eraser
 
@@ -170,7 +170,7 @@ auto_partition() {
 		        | dialog \
 		        --title "Formatting $DEVICE ..." \
 		        --progressbox --stdout 20 60;;
-		    4 *) ;;
+		    *) ;;
 		esac
 	}
 
