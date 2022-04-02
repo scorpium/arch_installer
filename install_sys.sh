@@ -1,12 +1,12 @@
 #!/bin/bash
 
-green="\e[0;92m"
-red="\e[0;91m"
-blue="\e[0;34m"
-purple="\e[0;35m"
-yellow="\e[0;33m"
-cyan="\e[0;36m"
-reset="\e[0m"
+GREEN="\e[0;92m"
+RED="\e[0;91m"
+BLUE="\e[0;34m"
+PURPLE="\e[0;35m"
+YELLOW="\e[0;33m"
+CYAN="\e[0;36m"
+RESET="\e[0m"
 
 part_mode=
 
@@ -19,56 +19,53 @@ pacman -Sy dialog --noconfirm
 # if zsh (z-shell) is in use
 ls -R /usr/share/kbd/keymaps/ | grep map.gz | rev | cut -d'.' -f 3- | rev > keymap.list  # lista todos arquivos map.gz e retira o final map.gz
 while true ; do
-	keyb=$(dialog --no-cancel --stdout --title "Set the console keyboard layout" \
+	KEYB=$(dialog --no-cancel --stdout --title "Set the console keyboard layout" \
 		--menu	"The default console keymap is US" \
 		0 0 0	\
 		1 "Set br-abnt2 BR" \
 		2 "Maintain default US" \
 		3 "Other layouts")
-	if [ "$keyb" = "1" ]; then
-		clear ; keyb="br-abnt2"  #loadkeys $keyb
+	if [ "$KEYB" = "1" ]; then
+		clear ; KEYB="br-abnt2" ; loadkeys $KEYB
 		break 
-	elif [ "$keyb" = "3" ]; then
-		keyb=$(dialog --stdout --title "Set the console keyboard layout" \
+	elif [ "$KEYB" = "3" ]; then
+		KEYB=$(dialog --stdout --title "Set the console keyboard layout" \
 		--menu "Choose your layout" \
 		0 0 0 \
 		$(cat -n keymap.list))
 		if [[ $? == 0 ]]; then
-			keyb=$(sed -n ${keyb}p keymap.list)
+			KEYB=$(sed -n ${KEYB}p keymap.list)
 			clear
-			echo $keyb # loadkeys $keyb
-			sleep 2
+			loadkeys $KEYB
 			break
 		fi	
 	else
-		echo "US"
 		break
 	fi
 done
 rm keymap.list
-echo $keyb
 
 ### Verify boot (UEFI or BIOS) ###
-uefi=0
-ls /sys/firmware/efi/efivars 2> /dev/null && uefi=1
+UEFI=0
+ls /sys/firmware/efi/efivars 2> /dev/null && UEFI=1
 
 ### Connect to the internet ###
 clear
-echo -e "\n         ${purple}Connect to the internet${reset}"
+echo -e "\n         ${PURPLE}Connect to the internet${RESET}"
 echo -e "\n     Ensure your network interface is listed and enabled"
 echo
 ip link
-sleep 5
+sleep 3
 echo
-echo -e "  \n ${cyan}The connection may be verified with ping${reset}\n"
-ping -c 4 archlinux.org
+echo -e "  \n ${CYAN}The connection may be verified with ping${RESET}\n"
+ping -c 3 archlinux.org
 if [ "$?" = "0" ]; then
 	echo
-	echo -e "    ${green}Connected${reset}"
-	sleep 2
+	echo -e "    ${GREEN}Connected${RESET}"
+	sleep 1
 else
 	echo
-  	echo -e "    ${red}Not connected${reset}"
+  	echo -e "    ${RED}Not connected${RESET}"
 	sleep 2
 	exit
 fi
@@ -88,7 +85,7 @@ read -rp "   Press Enter to continue  "
 # Welcome message of type yesno - see 'man dialog'
 dialog --defaultno --title "Are you sure?" --yesno \
     "This is the partition session. \n\n\
-    It will DESTROY EVERYTHING on one of your hard disk. \n\n\
+    It will DESTROY EVERYTHING on one of your device. \n\n\
     Don't say YES if you are not sure what you're doing! \n\n\
     Do you want to continue?" 15 60 || exit
 
@@ -98,72 +95,94 @@ dialog --defaultno --title "Are you sure?" --yesno \
 #comp=$(cat comp) && rm comp
 
 # Choosing the hard drive
-devices_list=($(lsblk -d | awk '{print "/dev/" $1 " " $4 " on"}' \
+DEVICES_LIST=($(lsblk -d | awk '{print "/dev/" $1 " " $4 " on"}' \
     | grep -E 'sd|hd|vd|nvme|mmcblk'))
 
-dialog --title "Choose your hard drive" --no-cancel --radiolist \
+dialog --title "Choose your device" --no-cancel --radiolist \
     "Where do you want to install your new system? \n\n\
     Select with SPACE, valid with ENTER. \n\n\
-    WARNING: Everything will be DESTROYED on the hard disk!" \
-    15 60 4 "${devices_list[@]}" 2> hd
+    WARNING: Everything will be DESTROYED on the device!" \
+    15 60 4 "${DEVICES_LIST[@]}" 2> hd
 
-hd=$(cat hd) && rm hd
+DEVICE=$(cat hd) && rm hd
+
+prepare_partition() {
+	mountpoint -q /mnt/boot
+    if [ $? == 0 ]; then
+        umount /mnt/boot
+    fi
+    mountpoint -q /mnt
+    if [ $? == 0 ]; then
+        umount /mnt
+    fi
+}
 
 auto_partition() {
-	swap_type=$(dialog --title "Swap type" \
+	prepare_partition
+	SWAP_TYPE=$(dialog --title "Swap type" \
 		--no-cancel --stdout --menu	"Would you like \
 		a swap partition, a file swap or no swap?" \
 		0 0 0 1 "Swap partition" \
 			  2 "File swap" \
 			  3 "No swap")
-	if [ "$swap_type" = "1" ]; then
+	if [ "$SWAP_TYPE" = "1" ]; then
 		# Ask for the size of the swap partition
-		default_size=4
+		DEFAULT_SIZE=4
 		dialog --no-cancel --inputbox \
 			"You need three partitions: Boot, Root and Swap \n\
 			The boot partition will be 512M \n\
-			The root partition will be the remaining of the hard disk \n\n\
+			The root partition will be the remaining of the device \n\n\
 			Enter below the partition size (in GB) for the swap. \n\n\
-			If you don't enter anything, it will default to ${default_size}G. \n" \
+			If you don't enter anything, it will default to ${DEFAULT_SIZE}G. \n" \
 			20 60 2> swap_size
 
-		size=$(cat swap_size) && rm swap_size
+		SWAP_SIZE=$(cat swap_size) && rm swap_size
 
-		[[ $size =~ ^[0-9]+$ ]] || size=$default_size
+		[[ $SWAP_SIZE =~ ^[0-9]+$ ]] || SWAP_SIZE=$DEFAULT_SIZE
 	fi	
 
 	dialog --no-cancel \
 		--title "!!! DELETE EVERYTHING !!!" \
-		--menu "Choose the way you'll wipe your hard didk ($hd)" \
+		--menu "Choose the way you'll wipe your device ($DEVICE)" \
 		15 60 4 \
-		1 "Use dd (wipe all disk)" \
-		2 "Use schred (slow & secure)" \
-		3 "No need - my hard disk is empty" 2> eraser
+		1 "Use sgdisk (faster)" \
+		2 "Use dd (wipe all disk)" \
+		3 "Use schred (slow & secure)" \
+		4 "No need - my hard disk is empty" 2> eraser
 
-	hderaser=$(cat eraser); rm eraser
+	DEVICE_ERASER=$(cat eraser); rm eraser
 
-	# This function can wipe out a hard disk.
-	# DO NOT RUN THIS FUNCTION ON YOUR ACTUAL SYSTEM!
-	# If you did it, DO NOT CALL IT!!
+	#This function can wipe out a hard disk.
+	#DO NOT RUN THIS FUNCTION ON YOUR ACTUAL SYSTEM!
+	#If you did it, DO NOT CALL IT!!
 	# If you did it, I'm sorry.
 	function eraseDisk() {
 		case $1 in
-		    1) dd if=/dev/zero of="$hd" status=progress 2>&1 \
+		    1) 	sgdisk --zap-all $DEVICE
+        		sgdisk -o $DEVICE
+        		wipefs -a -f $DEVICE
+        		partprobe -s $DEVICE
+		    2) dd if=/dev/zero of="$DEVICE" status=progress 2>&1 \
 		        | dialog \
-		        --title "Formatting $hd..." \
+		        --title "Formatting $DEVICE ..." \
 		        --progressbox --stdout 20 60;;
-		    2) shred -v "$hd" \
+		    3) shred -v "$DEVICE" \
 		        | dialog \
-		        --title "Formatting $hd..." \
+		        --title "Formatting $DEVICE ..." \
 		        --progressbox --stdout 20 60;;
-		    3) ;;
+		    *) ;;
 		esac
 	}
 
-	eraseDisk "$hderaser"
+	eraseDisk "$DEVICE_ERASER"
 
-	boot_partition_type=1
-	[[ "$uefi" == 0 ]] && boot_partition_type=4
+	BOOT_PARTITION_TYPE=1
+	[[ "$UEFI" == 0 ]] && BOOT_PARTITION_TYPE=4
+	
+	PARTITION_PARTED_UEFI="mklabel gpt mkpart ESP fat32 1MiB 512MiB mkpart root ext4 512MiB 100% set 1 esp on"
+	PARTITION_PARTED_UEFI_SWAP="mklabel gpt mkpart ESP fat32 1MiB 512MiB mkpart swap linux-swap 512MiB ${SWAP_SIZE}.5GiB mkpart root ext4 $SWAP_SIZE}.5GiB 100% set 1 esp on"
+    PARTITION_PARTED_BIOS="mklabel msdos mkpart primary ext4 4MiB 512MiB mkpart primary ext4 512MiB 100% set 1 boot on"
+    PARTITION_PARTED_BIOS_SWAP="mklabel msdos mkpart primary ext4 4MiB 512MiB mkpart primary linux-swap 512MiB ${SWAP_SIZE}.5GiB mkpart primary ext4 $SWAP_SIZE}.5GiB 100% set 1 boot on"
 
 	# Create the partitions
 
@@ -173,73 +192,48 @@ auto_partition() {
 	#e - extended partition
 	#w - write the table to disk and exit
 
-	partprobe "$hd"
+	partprobe "$DEVICE"
 	
-	if [ "$swap_type" = "1" ]; then
-		fdisk "$hd" << EOF
-		g
-		n
-
-
-		+300M
-		t
-		$boot_partition_type
-		n
-
-
-		+${size}G
-		t
-		
-		19
-		n
-
-
-
-		w
-EOF
+	if [ "$SWAP_TYPE" = "1" ]; then
+		if [ "UEFI" = "1" ]; then
+			parted -s $DEVICE $PARTITION_PARTED_UEFI_SWAP
+		else
+			parted -s $DEVICE $PARTITION_PARTED_BIOS_SWAP
+		fi
 	else
-		fdisk "$hd" << EOF
-		g
-		n
-
-
-		+300M
-		t
-		$boot_partition_type
-		n
-
-
-
-		w
-EOF
+		if [ "UEFI" = "1" ]; then
+			parted -s $DEVICE $PARTITION_PARTED_UEFI
+		else
+			parted -s $DEVICE $PARTITION_PARTED_BIOS
+		fi	
 	fi
-	partprobe "$hd"
+	partprobe "$DEVICE"
 }
 
 manual_partition() {
-	fdisk "$hd"
+	fdisk "$DEVICE"
 	clear
 	echo -e "Let's format the partitions: "
 	fdisk -l
 	while true ; do
 		read -p "1)Swap Partition 2)Swap File or 3)No swap (1,2 or 3):" swap
-		swap_type=$swap
+		SWAP_TYPE=$swap
 		if [ "$swap" -lt "1" ] || [ "$swap" -gt "3" ]; then
 			echo "Wrong number"
 		elif [ "$swap" = "1" ]; then
-			read -p "Swap partition number ${hd}? :" swap_number
-			mkswap "${hd}${swap_number}"
-        		swapon "${hd}${swap_number}"
+			read -p "Swap partition number ${DEVICE}? :" swap_number
+			mkswap "${DEVICE}${swap_number}"
+        		swapon "${DEVICE}${swap_number}"
 			break
 		fi
 	done
 	while true ; do
-		read -p "Root partition number ${hd}? :" root_number
-		echo "${hd}${root_number} - Is that correct? yn" 
+		read -p "Root partition number ${DEVICE}? :" root_number
+		echo "${DEVICE}${root_number} - Is that correct? yn" 
 		read answer
 		if [ "$answer" = "y" ]; then
-	 		mkfs.ext4 "${hd}${root_number}"
-			mount "${hd}${root_number}" /mnt
+	 		mkfs.ext4 "${DEVICE}${root_number}"
+			mount "${DEVICE}${root_number}" /mnt
 			break
 		fi
 	done
@@ -268,21 +262,21 @@ done
 ### Format the partitions and mount the file systems ###
 
 if [ "$part_mode" = "2" ]; then
-	if [ "$swap_type" = "1" ]; then
-		mkswap "${hd}2"
-		swapon "${hd}2"
-		mkfs.ext4 "${hd}3"
-		mount "${hd}3" /mnt
+	if [ "$SWAP_TYPE" = "1" ]; then
+		mkswap "${DEVICE}2"
+		swapon "${DEVICE}2"
+		mkfs.ext4 "${DEVICE}3"
+		mount "${DEVICE}3" /mnt
 	else
-		mkfs.ext4 "${hd}2"
-		mount "${hd}2" /mnt
+		mkfs.ext4 "${DEVICE}2"
+		mount "${DEVICE}2" /mnt
 	fi
 fi
 
 if [ "$uefi" = "1" ]; then
-    mkfs.fat -F32 "${hd}1"
+    mkfs.fat -F32 "${DEVICE}1"
     mkdir -p /mnt/boot/efi
-    mount "${hd}1" /mnt/boot/efi
+    mount "${DEVICE}1" /mnt/boot/efi
 fi
 
 
@@ -297,7 +291,7 @@ genfstab -U /mnt >> /mnt/etc/fstab
 
 # Persist important values for the next script
 echo "$uefi" > /mnt/var_uefi
-echo "$hd" > /mnt/var_hd
+echo "$DEVICE" > /mnt/var_hd
 echo "$comp" > /mnt/comp
 
 # Don't forget to replace "Phantas0s" by the username of your Github account
@@ -312,7 +306,7 @@ rm /mnt/install_chroot.sh
 rm /mnt/comp
 
 dialog --title "To reboot or not to reboot?" --yesno \
-"Congrats! The install is done! \n\n\
+/"Congrats! The install is done! \n\n\
 Do you want to reboot your computer?" 20 60
 
 response=$?
