@@ -108,13 +108,13 @@ DEVICE=$(cat hd) && rm hd
 
 prepare_partition() {
 	mountpoint -q /mnt/boot
-    if [ $? == 0 ]; then
-        umount /mnt/boot
-    fi
-    mountpoint -q /mnt
-    if [ $? == 0 ]; then
-        umount /mnt
-    fi
+    	if [ $? == 0 ]; then
+        	umount /mnt/boot
+    	fi
+    	mountpoint -q /mnt
+    	if [ $? == 0 ]; then
+        	umount /mnt
+    	fi
 }
 
 auto_partition() {
@@ -144,7 +144,7 @@ auto_partition() {
 	dialog --no-cancel \
 		--title "!!! DELETE EVERYTHING !!!" \
 		--menu "Choose the way you'll wipe your device ($DEVICE)" \
-		15 60 4 \
+		15 60 5 \
 		1 "Use sgdisk (faster)" \
 		2 "Use dd (wipe all disk)" \
 		3 "Use schred (slow & secure)" \
@@ -170,7 +170,7 @@ auto_partition() {
 		        | dialog \
 		        --title "Formatting $DEVICE ..." \
 		        --progressbox --stdout 20 60;;
-		    *) ;;
+		    4,*) ;;
 		esac
 	}
 
