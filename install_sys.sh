@@ -107,6 +107,7 @@ dialog --title "Choose your device" --no-cancel --radiolist \
 DEVICE=$(cat hd) && rm hd
 
 prepare_partition() {
+	set +e
 	mountpoint -q /mnt/boot
     	if [ $? == 0 ]; then
         	umount /mnt/boot
@@ -118,12 +119,13 @@ prepare_partition() {
     	SWAP_ON=$(fdisk -l | grep swap | awk '{print $1}')
     	if [ -n "$SWAP_ON" ]; then
     		swapoff $SWAP_ON
-    	fi	
-    	
+    	fi
+    set -e
 }
 
 auto_partition() {
 	prepare_partition
+	partprobe -s $DEVICE
 	SWAP_TYPE=$(dialog --title "Swap type" \
 		--no-cancel --stdout --menu	"Would you like \
 		a swap partition, a file swap or no swap?" \
@@ -189,15 +191,6 @@ auto_partition() {
     PARTITION_PARTED_BIOS="mklabel msdos mkpart primary ext4 4MiB 512MiB mkpart primary ext4 512MiB 100% set 1 boot on"
     PARTITION_PARTED_BIOS_SWAP="mklabel msdos mkpart primary ext4 4MiB 512MiB mkpart primary linux-swap 512MiB ${SWAP_SIZE}.5GiB mkpart primary ext4 ${SWAP_SIZE}.5GiB 100% set 1 boot on"
 
-	# Create the partitions
-
-	#g - create non empty GPT partition table
-	#n - create new partition
-	#p - primary partition
-	#e - extended partition
-	#w - write the table to disk and exit
-
-	partprobe "$DEVICE"
 	
 	if [ "$SWAP_TYPE" = "1" ]; then
 		if [ "UEFI" = "1" ]; then
@@ -212,7 +205,7 @@ auto_partition() {
 			parted -s $DEVICE $PARTITION_PARTED_BIOS
 		fi	
 	fi
-	partprobe "$DEVICE"
+	partprobe -s "$DEVICE"
 }
 
 manual_partition() {
